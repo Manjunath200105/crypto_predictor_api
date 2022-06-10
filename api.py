@@ -6,8 +6,10 @@ from flask import Flask
 from flask import (request, jsonify)
 from pandas import DataFrame
 from pandas import concat
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/predict', methods=['POST'])
@@ -20,8 +22,11 @@ def predict_api():
         df = yf.download(stock_name, start, end)
 
         day_list = []
-        for d in range(5):
-            day_list.append(df.index[-1] + datetime.timedelta(days=d + 1))
+        try:
+            for d in range(5):
+                day_list.append(df.index[-1] + datetime.timedelta(days=d + 1))
+        except:
+            return jsonify({}), 404
 
         n_input = 5
         n_nodes = [100, 50, 25, 15, 10]
@@ -71,7 +76,8 @@ def predict_api():
         starting_day = str(day_list[0].day)
         first_day = starting_month + '-' + starting_day + '-' + starting_year
 
-    return jsonify({'prediction1': float(my_predictions[0][0]),
+    return jsonify({'predictions': my_predictions[0].tolist(),
+                    'prediction1': float(my_predictions[0][0]),
                     'prediction2': float(my_predictions[0][1]), 'prediction3': float(my_predictions[0][2]),
                     'prediction4': float(my_predictions[0][3]), 'prediction5': float(my_predictions[0][4]),
                     'starting_day': first_day, 'stock_name': stock_name, 'past_data': data.tolist()})

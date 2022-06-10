@@ -4,3 +4,4 @@ yfinance
 tensorflow
 datetime
 pygal
+flask-cors
