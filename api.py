@@ -87,20 +87,8 @@ def predict_api():
         response = {}
         type = request.form['type']
         no_of_days = int(request.form['noOfDays'])
-        print(request.form)
-        for stock_name in str.split(request.form['currency'], ","):
+        for stock_name in str.split(request.form['currencies'], ","):
             response[stock_name] = predict(stock_name, type, no_of_days)
-    return jsonify(response)
-
-
-@app.route('/predict-all', methods=['GET'])
-def predict_all():
-    currency_list = ["BTC-USD", "BCH-USD", "XMR-USD", "ZEC-USD", "XRP-USD", "XLM-USD", "DASH-USD",
-                     "BTG-USD", "XRP-USD", "TRX-USD", "ETC-USD", "MIOTA-USD", "LTC-USD", "ADA-USD", "XEM-USD"]
-    if request.method == 'GET':
-        response = {}
-        for stock_name in currency_list:
-            response[stock_name] = predict(stock_name)
     return jsonify(response)
 
 
