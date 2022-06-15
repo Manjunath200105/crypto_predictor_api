@@ -12,14 +12,14 @@ app = Flask(__name__)
 CORS(app)
 
 
-def predict(stock_name):
+def predict(stock_name, type, number_of_days):
     end = datetime.datetime.today() - datetime.timedelta(days=1)
-    start = end - datetime.timedelta(days=285)
+    days = number_of_days if type == 'past_data' else 285
+    start = end - datetime.timedelta(days=days)
 
     df = yf.download(stock_name, start, end)
 
     day_list = []
-    number_of_days = 200
     try:
         for d in range(5):
             day_list.append(df.index[-1] + datetime.timedelta(days=d + 1))
@@ -37,6 +37,12 @@ def predict(stock_name):
     n_out = num_step
 
     data = df['Adj Close'].values
+
+    print(type)
+    if type == 'past_data':
+        return {'stock_name': stock_name,
+                'predictions': [],
+                'past_data': data.tolist()}
 
     def series_to_supervised(data, n_in, n_out=1):
         df = DataFrame(data)
@@ -69,22 +75,21 @@ def predict(stock_name):
     # fit model
     model.fit(X_train, y_train, epochs=n_epochs, batch_size=n_batch, verbose=0)
     my_predictions = model.predict(X_test)
-    starting_year = str(day_list[0].year)
-    starting_month = str(day_list[0].month)
-    starting_day = str(day_list[0].day)
-    first_day = starting_month + '-' + starting_day + '-' + starting_year
 
     return {'stock_name': stock_name,
             'predictions': my_predictions[0].tolist(),
-            'starting_day': first_day,
-            'past_data': data.tolist()}
+            'past_data': []}
 
 
 @app.route('/predict', methods=['POST'])
 def predict_api():
     if request.method == 'POST':
-        stock_name = request.form['name']
-        response = predict(stock_name)
+        response = {}
+        type = request.form['type']
+        no_of_days = int(request.form['noOfDays'])
+        print(request.form)
+        for stock_name in str.split(request.form['currency'], ","):
+            response[stock_name] = predict(stock_name, type, no_of_days)
     return jsonify(response)
 
 
