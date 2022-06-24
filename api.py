@@ -12,6 +12,21 @@ app = Flask(__name__)
 CORS(app)
 
 
+def get_stock_price(stock_name):
+    end = datetime.datetime.today() - datetime.timedelta(days=1)
+    days = 0
+    start = end - datetime.timedelta(days=days)
+    df = yf.download(stock_name, start, end)
+    data = df['Adj Close'].values
+    return data.tolist()[0]
+
+
+def exchange(from_stock, to_stock):
+    from_price = get_stock_price(from_stock)
+    to_price = get_stock_price(to_stock)
+    return to_price / from_price
+
+
 def predict(stock_name, type, number_of_days):
     end = datetime.datetime.today() - datetime.timedelta(days=1)
     days = number_of_days if type == 'past_data' else 285
@@ -38,7 +53,6 @@ def predict(stock_name, type, number_of_days):
 
     data = df['Adj Close'].values
 
-    print(type)
     if type == 'past_data':
         return {'stock_name': stock_name,
                 'predictions': [],
@@ -89,6 +103,16 @@ def predict_api():
         no_of_days = int(request.form['noOfDays'])
         for stock_name in str.split(request.form['currencies'], ","):
             response[stock_name] = predict(stock_name, type, no_of_days)
+    return jsonify(response)
+
+
+@app.route('/exchange', methods=['POST'])
+def exchange_api():
+    if request.method == 'POST':
+        response = {}
+        from_currency = request.form['from_currency']
+        for stock_name in str.split(request.form['to_currencies'], ","):
+            response[stock_name] = exchange(from_currency, stock_name)
     return jsonify(response)
 
 
