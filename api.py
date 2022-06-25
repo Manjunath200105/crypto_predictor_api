@@ -114,7 +114,7 @@ def exchange_api():
 
     response = {'base_price': {}, 'exchange': {}}
     for c in np.unique(currencies):
-        response['base_price'][c] = "{:.5f}".format(get_stock_price(c))
+        response['base_price'][c] = "$ {:.5f}".format(get_stock_price(c))
 
     for base in from_currencies:
         base_price = get_stock_price(base)
