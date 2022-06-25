@@ -5,3 +5,4 @@ tensorflow
 datetime
 pygal
 flask-cors
+numpy

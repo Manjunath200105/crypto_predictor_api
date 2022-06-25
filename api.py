@@ -7,6 +7,7 @@ from flask import (request, jsonify)
 from pandas import DataFrame
 from pandas import concat
 from flask_cors import CORS
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)
@@ -21,10 +22,9 @@ def get_stock_price(stock_name):
     return data.tolist()[0]
 
 
-def exchange(from_stock, to_stock):
-    from_price = get_stock_price(from_stock)
+def exchange(base_price, to_stock):
     to_price = get_stock_price(to_stock)
-    return to_price / from_price
+    return "{:.5f} ".format((base_price / to_price)) + to_stock.split("-")[0]
 
 
 def predict(stock_name, type, number_of_days):
@@ -108,11 +108,19 @@ def predict_api():
 
 @app.route('/exchange', methods=['POST'])
 def exchange_api():
-    if request.method == 'POST':
-        response = {}
-        from_currency = request.form['from_currency']
+    from_currencies = str.split(request.form['from_currencies'], ",")
+    to_currencies = str.split(request.form['to_currencies'], ",")
+    currencies = np.array(from_currencies + to_currencies)
+
+    response = {'base_price': {}, 'exchange': {}}
+    for c in np.unique(currencies):
+        response['base_price'][c] = "{:.5f}".format(get_stock_price(c))
+
+    for base in from_currencies:
+        base_price = get_stock_price(base)
         for stock_name in str.split(request.form['to_currencies'], ","):
-            response[stock_name] = exchange(from_currency, stock_name)
+            response['exchange'][base + ' -> ' + stock_name] = "1 " + base.split("-")[0] + " = " + exchange(base_price,
+                                                                                                            stock_name)
     return jsonify(response)
 
 
